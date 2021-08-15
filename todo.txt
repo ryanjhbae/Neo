@@ -1,0 +1,25 @@
+To Do
+
+- Finish implementing basic methods
+	- Implement vector multiplication assignment (*=)
+	- Implement Matrix multiplication and multiplication assignment
+	- Implement scalar mulitplication and assignment
+
+- Create an exception class for:
+
+	- Checking whether Matrix addition/subtraction is valid
+	- Checking whether Matrix multiplication is valid
+	- Checking whether Matrix vector multiplication is valid
+	- Checking whether Matrix initialization is valid (all rows have the same
+	  number of entries)
+
+Actual Matrix features:
+
+- Implement transpose
+- Implement inverse
+	- Add exceptions for the case where an inverse does not exist
+- Implement rank
+- Implement swapRows
+- Implement swapCols
+- Implement row and column accessors/assignment
+- Implement row/column insertion

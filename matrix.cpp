@@ -1,25 +1,27 @@
 
 // Matrix Template Class: Implementation
 
+// UNCHECKED ELEMENT ACCESSORS
 
-#if 0
-template <class T> Matrix<T>::Matrix(int width, int height) 
-	: width{ width }, height{ height } {
-
-	theMatrix.resize(height);
-	for (int i = 0; i < height; ++i) {
-		vector<T>& row = theMatrix[i];
-		row.resize(width);
-
-		for (int j = 0; j < width; ++j) {
-			row[j] = 0;
-		}
-
-// want to initialize to the identity matrix but not sure 
-// how to do that with templates
-	}
+template <class T> vector<T>& Matrix<T>::operator[](int i) {
+	return theMatrix[i];
 }
-#endif 
+
+template <class T> const vector<T>& Matrix<T>::operator[](int i) const {
+	return theMatrix[i];
+}
+
+// CHECKED ELEMENT ACCESSORS
+
+template <class T> T& Matrix<T>::at(int row, int col) {
+	return theMatrix.at(row).at(col);
+}
+
+template <class T> const T& Matrix<T>::at(int row, int col) const {
+	return theMatrix.at(row).at(col);
+}
+
+// MATRIX ALGEBRA
 
 template <class T> Matrix<T> Matrix<T>::operator+(const Matrix <T>& rhs) {
 	// throw error if they're not the same size
@@ -35,6 +37,15 @@ template <class T> Matrix<T> Matrix<T>::operator+(const Matrix <T>& rhs) {
 
 template <class T> Matrix<T>& Matrix<T>::operator+=(const Matrix <T>& rhs) {
 
+	for (int row = 0; row < height; ++row) {
+		for (int col = 0; col < width; ++col) {
+			theMatrix[row][col] += rhs[row][col];
+		}
+	}
+	// The solution below works fine, it's just less optimal in terms of 
+	// performance since we have to copy the object
+	// *this = *this + rhs;
+	return *this;
 }
 
 template <class T> Matrix<T> Matrix<T>::operator-(const Matrix <T>& rhs) {
@@ -50,29 +61,68 @@ template <class T> Matrix<T> Matrix<T>::operator-(const Matrix <T>& rhs) {
 }
 
 template <class T> Matrix<T>& Matrix<T>::operator-=(const Matrix <T>& rhs) {
-
+	for (int row = 0; row < height; ++row) {
+		for (int col = 0; col < width; ++col) {
+			theMatrix[row][col] -= rhs[row][col];
+		}
+	}
+	return *this;
 }
+
+// MATRIX MULTIPLICATION
 
 template <class T> Matrix<T> Matrix<T>::operator*(const Matrix <T>& rhs) {
 
+	int m = height;
+	int n = width;
+	int p = rhs.getWidth();
+	
+	if (n != rhs.getHeight()) { // throw error if multiplication isn't defined
+		
+	}
+
+	Matrix<T> prod;
+
+	// multiplying a Matrix with m rows and n columns
+	// by a Matrix with n rows and p columns produces
+	// a Matrix with m rows and p columns
+	
+	prod.resize(p, m);
+
+	for (int i = 0; i < m; ++i) {
+		for (int j = 0; j < p; ++j) {
+			prod[i][j] = theMatrix[i][0] * rhs[0][j];
+			for (int k = 1; k < n; ++k) {
+				prod[i][j] += theMatrix[i][k] * rhs[k][j];
+			}
+		}
+	}
+
+	return prod;
 }
 
 template <class T> Matrix<T>& Matrix<T>::operator*=(const Matrix <T>& rhs) {
+	// throw error if multiplication isn't defined
 
 }
 
 // VECTOR MULTIPLICATION
 
-template <class T> Matrix<T> Matrix<T>::operator*(const vector<T>& vec) {
-
+template <class T> vector<T> Matrix<T>::operator*(const vector<T>& vec) {
+	// throw error if multiplication isn't defined
+	vector<T> product;
+	product.resize(height);
+	for (int rowNum = 0; rowNum < height; ++rowNum) {
+		product[rowNum] = theMatrix[rowNum][0] * vec[0]; // initial value
+		for (int colNum = 1; colNum < width; ++colNum) {
+			product[rowNum] += theMatrix[rowNum][colNum] * vec[colNum];
+		}
+	}
+	return product;
 }
 
-template <class T> Matrix<T>& Matrix<T>::operator*=(const vector<T>& vec) {
+template <class T> vector<T>& Matrix<T>::operator*=(const vector<T>& vec) {
 
-}
-
-template <class T> vector<T>& Matrix<T>::operator[](int i) {
-	return theMatrix[i];
 }
 
 template <class T> void Matrix<T>::fill(T val) {
@@ -100,6 +150,8 @@ template <class T> bool Matrix<T>::operator==(const Matrix<T>& rhs) const {
 template <class T> bool Matrix<T>::operator!=(const Matrix<T>& rhs) const {
 	return !(*this == rhs);
 }
+
+// MANIPULATE SIZE
 
 template <class T> int Matrix<T>::getWidth() const {
 	return width;
@@ -135,4 +187,15 @@ template <class T> void Matrix<T>::setHeight(int h) {
 template <class T> void Matrix<T>::resize(int w, int h) {
 	setHeight(h);
 	setWidth(w);
+}
+
+template <class T> Matrix<T> Matrix<T>::getTranspose() {
+	Matrix<T> Tr;
+	Tr.resize(height, width);
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			Tr[j][i] = theMatrix[i][j];
+		}
+	}
+	return Tr;
 }
