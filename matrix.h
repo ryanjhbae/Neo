@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iostream>
+#include "neo-exceptions.h"
 
 using std::cout;
 using std::endl;
@@ -11,62 +12,71 @@ using std::vector;
 
 template <class T> class Matrix {
 
-	private:
-		int width;
-		int height;
-		// Vector of height rows of width length each
-		vector<vector<T>> theMatrix;
+private:
+	int width;
+	int height;
+	// Vector of height rows of width length each
+	vector<vector<T>> theMatrix;
 
-	public:
+public:
 
-		// Matrix<T> Matrix(int width, int height);
-		// How to make a template constructor?
+	// Matrix<T> Matrix(int width, int height);
+	// How to make a template constructor?
 
-		Matrix<T> operator+(const Matrix<T>& rhs);
-#if 0
-		
-		Matrix<T> operator+=(const Matrix<T>& rhs);
-		Matrix<T> operator-(const Matrix<T>& rhs);
-		Matrix<T> operator-=(const Matrix<T>& rhs);
-		Matrix<T> operator*(const Matrix<T>& rhs);
-		Matrix<T> operator*=(const Matrix<T>& rhs);
+	
+	
 
-		
-#endif	
-		// Unchecked accessor for the i - 1 th row
-		vector<T>& operator[](int i);
-		void fill(T);
-		
-		bool operator==(const Matrix<T>& rhs) const;
-		bool operator!=(const Matrix<T>& rhs) const;
+	bool sameSize(const Matrix<T>& other);
 
-		int getWidth() const;
-		int getHeight() const;
-		void setWidth(int w);
-		void setHeight(int h);
-		void resize(int w, int h);
+	// Matrix algebra
+	Matrix<T> operator+(const Matrix<T>& rhs);
+	Matrix<T>& operator+=(const Matrix<T>& rhs);
+	Matrix<T> operator-(const Matrix<T>& rhs);
+	Matrix<T>& operator-=(const Matrix<T>& rhs);
+	Matrix<T> operator*(const Matrix<T>& rhs);
+	Matrix<T>& operator*=(const Matrix<T>& rhs);	
 
-		// Very basic functionality for now, mostly for testing
+	// Vector multiplication
+	Matrix<T> operator*(const vector<T>& vec);
+	Matrix<T>& operator*=(const vector<T>& vec);
 
-		// Inline as per the approach suggested at 
-		// https://stackoverflow.com/questions/4660123/overloading-friend-operator-for-template-class
-		friend ostream& operator<<(ostream& out, const Matrix<T>& m) {
+	// Unchecked accessor for the i - 1 th row
+	vector<T>& operator[](int i);
 
-			for (int col = 0; col < m.height; ++col) {
-				bool atLeastOne = false;
-				for (int row = 0; row < m.width; ++row) {
-					if (atLeastOne) {
-						out << ' ';
-					}
-					else {
-						atLeastOne = true;
-					}
-					out << m.theMatrix[col][row];
+	void fill(T);
+
+	bool operator==(const Matrix<T>& rhs) const;
+	bool operator!=(const Matrix<T>& rhs) const;
+
+	int getWidth() const;
+	int getHeight() const;
+	void setWidth(int w);
+	void setHeight(int h);
+	void resize(int w, int h);
+
+	// Add scalar multiplication here
+
+	// Very basic functionality for now, mostly for testing
+
+	// Inline as per the approach suggested at 
+	// https://stackoverflow.com/questions/4660123/overloading-friend-operator-for-template-class
+	friend ostream& operator<<(ostream& out, const Matrix<T>& m) {
+
+		for (int col = 0; col < m.height; ++col) {
+			bool atLeastOne = false;
+			for (int row = 0; row < m.width; ++row) {
+				if (atLeastOne) {
+					out << ' ';
 				}
-				out << endl;
+				else {
+					atLeastOne = true;
+				}
+				out << m.theMatrix[col][row];
 			}
-			return out;
+			out << endl;
 		}
+		return out;
+	}
 };
 
 #include "matrix.cc"
