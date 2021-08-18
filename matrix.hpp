@@ -1,14 +1,17 @@
 #ifndef __NEO_MATRIX_H__
 #define __NEO_MATRIX_H__
 
-#include <vector>
-#include <iostream>
+#include <functional>
 #include <initializer_list>
-#include "neo-exceptions.hpp"
+#include <iostream>
+#include <stdexcept>
+#include <vector>
 
 using std::cout;
 using std::endl;
+using std::function;
 using std::initializer_list;
+using std::invalid_argument;
 using std::ostream;
 using std::vector;
 
@@ -34,61 +37,36 @@ private:
 	// Generalize the + and - methods (probably more work than it's worth)
 	// Matrix<T> mapEntryWise(const Matrix<T>& rhs, operator);
 
+	bool sameSizeAs(const Matrix& other);
+	void checkSameSize(const Matrix& other);
+	void checkValidMult(const Matrix& other);
+	void checkValidMult(const vector<T>& vec);	
+
 public:
 
 	// Overloaded constructor
-
-	Matrix<T>(int width = 0, int height = 0) : width{ width }, height{ height } {
-		theMatrix.resize(height);
-		for (int i = 0; i < height; ++i) {
-			theMatrix[i].resize(width);
-		}
-	}
-
-	Matrix<T>(vector<vector<T>> m) : theMatrix{ m } {
-		// Throw an error if incomplete (size doesn't align)
-		height = m.size();
-		width = 0;
-		if (height > 0) {
-			width = m[0].size();
-		}
-	}
-
+	Matrix<T>(int width = 0, int height = 0);
+	Matrix<T>(vector<vector<T>> m);
+	Matrix<T>(initializer_list<initializer_list<T>> init_list);
 	// Allows initialization like { {1, 2, 3}, {4, 5, 6}, {7, 8, 9} }
 
-	Matrix<T>(initializer_list<initializer_list<T>> init_list) {
-		// Throw an error if incomplete (size doesn't align)
-		height = static_cast<int>(init_list.size());
-		width = static_cast<int>((init_list.begin())->size());
-		
-		theMatrix.resize(height);
-		for (int rowNum = 0; rowNum < height; ++rowNum) {
-			vector<T>& row = theMatrix[rowNum];
-			row.resize(width);
-			for (int colNum = 0; colNum < width; ++colNum) {
-				row[colNum] = ((init_list.begin() + rowNum)->begin())[colNum];
-			}
-		}
-		
-	}
-
-	// Matrix<T> Matrix(int width, int height);
-	// How to make a template constructor?
+	// Applies func to each entry
+	void mapEntries(function<void(T&, int, int)> func);
+	void mapEntries(function<void(T&)> func);
 
 	// Unchecked accessors
-
 	vector<T>& operator[](int i);
 	const vector<T>& operator[](int i) const;
 
 	// Checked accessors 
-
-	T& at(int row, int col);
-	const T& at(int row, int col) const;
+	vector<T>& at(int row);
+	const vector<T>& at(int row) const;
 
 	// Matrix Algebra
 
-	// Ensure to add exceptions for when the operations are not
-	// valid (matrix sizes don't align)
+	// For Matrix operations and vector multiplication, an instance
+	// of std::invalid_argument is thrown when the operations are not
+	// defined
 	Matrix<T> operator+(const Matrix<T>& rhs);
 	Matrix<T>& operator+=(const Matrix<T>& rhs);
 	Matrix<T> operator-(const Matrix<T>& rhs);
@@ -103,16 +81,6 @@ public:
 	// Scalar multiplication (Matrix * scalar)
 	Matrix<T> operator*(const T& scalar);
 	Matrix<T>& operator*=(const T& scalar);
-	
-	// Scalar multiplication (scalar * Matrix)
-	friend Matrix<T> operator*(const T& scalar, const Matrix<T>& rhs) {
-
-	}
-	friend Matrix<T>& operator*=(T& scalar, const Matrix<T>& rhs) {
-
-	}
-
-	// 
 
 	void fill(T);
 

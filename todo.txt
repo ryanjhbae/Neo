@@ -13,9 +13,11 @@ To Do
 	- Checking whether Matrix initialization is valid (all rows have the same
 	  number of entries)
 
+- Implement transpose
+________________________________________________________________________________
+
 Actual Matrix features:
 
-- Implement transpose
 - Implement inverse
 	- Add exceptions for the case where an inverse does not exist
 - Implement rank
@@ -23,3 +25,5 @@ Actual Matrix features:
 - Implement swapCols
 - Implement row and column accessors/assignment
 - Implement row/column insertion
+
+- Make *= for vector and matrix mult more efficient (low priority)

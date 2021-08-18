@@ -1,1 +1,2 @@
-calling it Neo after the name of the main character in The Matrix
+A simple Matrix template class. My intent is to eventually support
+all the Lin Alg content covered in a typical first-year course.

@@ -1,5 +1,109 @@
 
-// Matrix Template Class: Implementation
+// Check for valid operations
+
+template <class T> bool Matrix<T>::sameSizeAs(const Matrix& other) {
+	return (height == other.getHeight()) &&
+		(width == other.getWidth());
+}
+
+template <class T> void Matrix<T>::checkSameSize(const Matrix& other) {
+	if (!sameSizeAs(other)) {
+		throw invalid_argument(
+			"Entrywise operation undefined: matrices are of different sizes."
+		);
+	}
+}
+
+template <class T> void Matrix<T>::checkValidMult(const Matrix& other) {
+	if (width != other.getHeight()) {
+		throw invalid_argument(
+			"Undefined Matrix multiplication: the number of columns in the left Matrix does not match the number of rows in the right Matrix."
+		);
+	}
+}
+
+template <class T> void Matrix<T>::checkValidMult(const vector<T>& vec) {
+	if (width != vec.size()) {
+		throw invalid_argument(
+			"Undefined vector multiplication. The width of the Matrix does not match the height of the vector."
+		);
+	}
+}
+
+// ****************************************************************************
+
+// Apply func to each entry
+
+template <class T> void Matrix<T>::mapEntries(function<void(T&, int, int)> func) {
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			func(theMatrix[i][j], i, j);
+		}
+	}
+}
+
+template <class T> void Matrix<T>::mapEntries(function<void(T&)> func) {
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			func(theMatrix[i][j]);
+		}
+	}
+}
+
+// ****************************************************************************
+
+// OVERLOADED CONSTRUCTORS
+
+template <class T> Matrix<T>::Matrix(int width, int height) 
+	: width{ width }, height{ height } {
+	theMatrix.resize(height);
+	for (int i = 0; i < height; ++i) {
+		theMatrix[i].resize(width);
+	}
+}
+
+template <class T> Matrix<T>::Matrix(vector<vector<T>> m) : theMatrix{ m } {
+	for (int i = 1; i < m.size(); ++i) {
+		if (m[i].size() != m[i - 1].size()) {
+			throw invalid_argument(
+				"Incomplete Matrix. Check that all rows are the same size."
+			);
+		}
+	}
+	height = m.size();
+	width = 0;
+	if (height > 0) {
+		width = m[0].size();
+	}
+}
+
+template <class T> Matrix<T>::Matrix(initializer_list<initializer_list<T>> init_list) {
+	int prevSize = init_list.begin()->size();
+	int curSize;
+	// Refactor to do all this in one loop
+	for (int i = 1; i < init_list.size(); ++i) {
+		curSize = (init_list.begin() + i)->size();
+		if (curSize != prevSize) {
+			throw invalid_argument(
+				"Incomplete Matrix initialization. Check that all rows are the same size."
+			);
+		}
+		prevSize = curSize;
+	}
+	height = static_cast<int>(init_list.size());
+	width = static_cast<int>((init_list.begin())->size());
+
+	theMatrix.resize(height);
+	for (int rowNum = 0; rowNum < height; ++rowNum) {
+		vector<T>& row = theMatrix[rowNum];
+		row.resize(width);
+		for (int colNum = 0; colNum < width; ++colNum) {
+			row[colNum] = ((init_list.begin() + rowNum)->begin())[colNum];
+		}
+	}
+}
+
+// ****************************************************************************
 
 // UNCHECKED ELEMENT ACCESSORS
 
@@ -13,74 +117,60 @@ template <class T> const vector<T>& Matrix<T>::operator[](int i) const {
 
 // CHECKED ELEMENT ACCESSORS
 
-template <class T> T& Matrix<T>::at(int row, int col) {
-	return theMatrix.at(row).at(col);
+template <class T> vector<T>& Matrix<T>::at(int row) {
+	return theMatrix.at(row);
 }
 
-template <class T> const T& Matrix<T>::at(int row, int col) const {
-	return theMatrix.at(row).at(col);
+template <class T> const vector<T>& Matrix<T>::at(int row) const {
+	return theMatrix.at(row);
 }
+
+// ****************************************************************************
 
 // MATRIX ALGEBRA
 
 template <class T> Matrix<T> Matrix<T>::operator+(const Matrix <T>& rhs) {
-	// throw error if they're not the same size
+	checkSameSize(rhs);
 	Matrix<T> sum;
 	sum.resize(width, height);
-	for (int row = 0; row < height; ++row) {
-		for (int col = 0; col < width; ++col) {
-			sum[row][col] = theMatrix[row][col] + rhs[row][col];
-		}
-	}
+
+	sum.mapEntries([ this, rhs ](T& entry, int row, int col) -> 
+		void { entry = theMatrix[row][col] + rhs[row][col]; });
+	
 	return sum;
 }
 
 template <class T> Matrix<T>& Matrix<T>::operator+=(const Matrix <T>& rhs) {
-
-	for (int row = 0; row < height; ++row) {
-		for (int col = 0; col < width; ++col) {
-			theMatrix[row][col] += rhs[row][col];
-		}
-	}
-	// The solution below works fine, it's just less optimal in terms of 
-	// performance since we have to copy the object
-	// *this = *this + rhs;
+	checkSameSize(rhs);
+	this->mapEntries([rhs](T& entry, int row, int col) ->
+		void { entry += rhs[row][col]; });
 	return *this;
 }
 
 template <class T> Matrix<T> Matrix<T>::operator-(const Matrix <T>& rhs) {
-	// throw error if they're not the same size
+	checkSameSize(rhs);
 	Matrix<T> diff;
 	diff.resize(width, height);
-	for (int row = 0; row < height; ++row) {
-		for (int col = 0; col < width; ++col) {
-			diff[row][col] = theMatrix[row][col] - rhs[row][col];
-		}
-	}
+	diff.mapEntries([this, rhs](T& entry, int row, int col) ->
+		void { entry = theMatrix[row][col] - rhs[row][col]; });
 	return diff;
 }
 
 template <class T> Matrix<T>& Matrix<T>::operator-=(const Matrix <T>& rhs) {
-	for (int row = 0; row < height; ++row) {
-		for (int col = 0; col < width; ++col) {
-			theMatrix[row][col] -= rhs[row][col];
-		}
-	}
+	checkSameSize(rhs);
+	this->mapEntries([rhs](T& entry, int row, int col) ->
+		void { entry -= rhs[row][col]; });
 	return *this;
 }
 
 // MATRIX MULTIPLICATION
 
 template <class T> Matrix<T> Matrix<T>::operator*(const Matrix <T>& rhs) {
+	checkValidMult(rhs);
 
 	int m = height;
 	int n = width;
 	int p = rhs.getWidth();
-	
-	if (n != rhs.getHeight()) { // throw error if multiplication isn't defined
-		
-	}
-
 	Matrix<T> prod;
 
 	// multiplying a Matrix with m rows and n columns
@@ -102,14 +192,16 @@ template <class T> Matrix<T> Matrix<T>::operator*(const Matrix <T>& rhs) {
 }
 
 template <class T> Matrix<T>& Matrix<T>::operator*=(const Matrix <T>& rhs) {
-	// throw error if multiplication isn't defined
-
+	checkValidMult(rhs);
+	Matrix<T> temp = *this * rhs; // inefficient but what we're going with for now
+	*this = temp;
+	return *this;
 }
 
 // VECTOR MULTIPLICATION
 
 template <class T> vector<T> Matrix<T>::operator*(const vector<T>& vec) {
-	// throw error if multiplication isn't defined
+	checkValidMult(vec);
 	vector<T> product;
 	product.resize(height);
 	for (int rowNum = 0; rowNum < height; ++rowNum) {
@@ -122,16 +214,27 @@ template <class T> vector<T> Matrix<T>::operator*(const vector<T>& vec) {
 }
 
 template <class T> vector<T>& Matrix<T>::operator*=(const vector<T>& vec) {
-
+	checkValidMult(vec);
+	Matrix<T> temp = *this * vec; // inefficient but what we're going with for now
+	*this = temp;
+	return *this;
 }
 
-template <class T> void Matrix<T>::fill(T val) {
-	for (int i = 0; i < height; ++i) {
-		for (int j = 0; j < width; ++j) {
-			theMatrix[i][j] = val;
-		}
-	}
+// ****************************************************************************
+
+// SCALAR MULTIPLICATION
+
+template <class T> Matrix<T> Matrix<T>::operator*(const T& scalar) {
+	Matrix<T> temp = *this;
+	temp.mapEntryWise([scalar](T& entry) -> void { entry *= scalar; });
+	return temp;
 }
+template <class T> Matrix<T>& Matrix<T>::operator*=(const T& scalar) {
+	this->mapEntryWise([scalar](T& entry) -> void { entry *= scalar; });
+	return *this;
+}
+
+// ****************************************************************************
 
 template <class T> bool Matrix<T>::operator==(const Matrix<T>& rhs) const {
 	if (width != rhs.width) return false;
@@ -151,14 +254,18 @@ template <class T> bool Matrix<T>::operator!=(const Matrix<T>& rhs) const {
 	return !(*this == rhs);
 }
 
+// ****************************************************************************
+
+template <class T> void Matrix<T>::fill(T val) {
+	// For now this is fine since fill is the only method not using the row
+	// and col params
+	this->mapEntries([&val](T& entry) -> void { entry = val; });
+}
+
 // MANIPULATE SIZE
 
-template <class T> int Matrix<T>::getWidth() const {
-	return width;
-}
-template <class T> int Matrix<T>::getHeight() const {
-	return height;
-}
+template <class T> int Matrix<T>::getWidth() const { return width; }
+template <class T> int Matrix<T>::getHeight() const { return height; }
 
 template <class T> void Matrix<T>::setWidth(int w) {
 	for (int i = 0; i < height; ++i) {
@@ -189,13 +296,23 @@ template <class T> void Matrix<T>::resize(int w, int h) {
 	setWidth(w);
 }
 
+// ****************************************************************************
+
 template <class T> Matrix<T> Matrix<T>::getTranspose() {
 	Matrix<T> Tr;
 	Tr.resize(height, width);
-	for (int i = 0; i < height; ++i) {
+
+	Tr.mapEntries([this](T& entry, int row, int col) ->
+		void { entry = theMatrix[col][row]; }); 
+	// flip col and row since it's the transpose
+
+	/*
+	* for (int i = 0; i < height; ++i) {
 		for (int j = 0; j < width; ++j) {
 			Tr[j][i] = theMatrix[i][j];
 		}
 	}
+	*/
+	
 	return Tr;
 }
